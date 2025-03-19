@@ -1,0 +1,64 @@
+// app.js
+const apiKey = "YOUR_API_KEY"; // Replace with your OpenWeatherMap API key
+
+// Function to show the weather data
+async function getWeather() {
+    const city = document.getElementById('city-input').value;
+    if (!city) return alert('Please enter a city name.');
+
+    // Show loading spinner
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('weather-info').style.display = 'none';
+
+    // Fetch weather data from OpenWeatherMap API
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod !== 200) {
+            alert('City not found');
+            document.getElementById('loading').style.display = 'none';
+            return;
+        }
+
+        // Hide loading spinner and show weather info
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('weather-info').style.display = 'block';
+
+        // Update weather information
+        document.getElementById('city-name').innerText = `${data.name}, ${data.sys.country}`;
+        document.getElementById('temperature').innerText = `Temperature: ${data.main.temp}°C`;
+        document.getElementById('description').innerText = `Weather: ${data.weather[0].description}`;
+        document.getElementById('humidity').innerText = `Humidity: ${data.main.humidity}%`;
+        document.getElementById('wind-speed').innerText = `Wind Speed: ${data.wind.speed} m/s`;
+
+        // Set the weather icon
+        const iconCode = data.weather[0].icon;
+        document.getElementById('weather-icon').src = `http://openweathermap.org/img/wn/${iconCode}.png`;
+
+        // Store the last searched city in localStorage
+        localStorage.setItem('lastCity', city);
+        displayLastSearch(city);
+    } catch (error) {
+        console.error(error);
+        alert('Error fetching weather data.');
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+// Function to display the last searched city
+function displayLastSearch(city) {
+    document.getElementById('last-search').innerText = city ? `Last searched: ${city}` : 'No city searched yet.';
+}
+
+// Initialize page with the last searched city
+window.onload = function () {
+    const lastCity = localStorage.getItem('lastCity');
+    if (lastCity) {
+        document.getElementById('city-input').value = lastCity;
+        getWeather(); // Auto-fetch weather for the last searched city
+    } else {
+        displayLastSearch('');
+    }
+};
